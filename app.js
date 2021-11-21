@@ -1,9 +1,6 @@
-// get vid to pause if no sound
-// switching audio tracks dosen't reset timer
-// If changing duration plays the tune it should restart
-
 const song = document.querySelector('.song');
 const play = document.querySelector('.play');
+const stopButton = document.querySelector('.stop');
 const outline = document.querySelector('.moving-outline circle');
 const video = document.querySelector('.vid-container video');
 
@@ -25,16 +22,21 @@ init();
 function init() {
 
     play.addEventListener('click', () => {
-        togglePlay(song);
+        togglePlay();
     });
 
-    // Called every frame??, use like update
+    stopButton.addEventListener('click', () => {
+        stopIt();
+    });
+
+    // Called often, use like update
     song.ontimeupdate = () => {
         currentTime = song.currentTime;
         let elapsed = fakeDuration - currentTime;
         let seconds = Math.floor(elapsed % 60);
+        seconds = seconds > 9 ? seconds : '0' + seconds;
         let minutes = Math.floor(elapsed / 60);
-
+        
         // Animate circle
         let progress = outlineLength - (currentTime / fakeDuration) * outlineLength;
         outline.style.strokeDashoffset = progress;
@@ -43,7 +45,7 @@ function init() {
         timeDisplay.textContent = `${minutes}:${seconds}`;
 
         if (currentTime >= fakeDuration) {
-            stopIt(song);
+            pauseIt();
             song.currentTime = 0;
         }
     }
@@ -51,12 +53,13 @@ function init() {
     // Add funcitonality to time select buttons
     timeSelect.forEach(option => {
         option.addEventListener("click", function() {
-            fakeDuration = this.getAttribute("data-time");   
+            fakeDuration = this.getAttribute("data-time"); 
+            if (!song.paused) return;  
             timeDisplay.textContent = `${Math.floor(fakeDuration / 60)}:${'0' + Math.floor(fakeDuration % 60).toString()}`;     
         });
     });
 
-    // Choose audio track
+    // Associate audio and video with there respective buttons
     sounds.forEach(sound => {
         sound.addEventListener('click', function() {
             song.src = this.getAttribute('data-sound');
@@ -72,11 +75,11 @@ function togglePlay() {
     if (song.paused) {
         playIt();
     } else {
-        stopIt();
+        pauseIt();
     }
 };
 
-function stopIt() {
+function pauseIt() {
     song.pause();
     play.src = './svg/play.svg';
     video.pause();
@@ -88,6 +91,7 @@ function playIt() {
     video.play();
 }
 
-function swapIt(){
-    console.log('Swapping');
+function stopIt() {
+    pauseIt();
+    song.currentTime = 0;
 }
